@@ -65,8 +65,8 @@ commons_moveFile(){
 
 commons_setOwnerRecursive(){
 
-    local target="$1"
-    local username="$2"
+    local username="$1"
+    local target="$2"
 
     if [[ -e $target ]]; then
         echo "INFO: Setting ownership for $target to $username" 1>&2
