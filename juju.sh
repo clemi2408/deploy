@@ -15,18 +15,17 @@ JUJU_CONTROLLER_TIMEOUT=10000
 JUJU_CONTROLLER_USER="admin"
 JUJU_CONTROLLER_CONSTRAINTS="mem=1.5G cores=1 arch=arm64"
 
-
 juju_bootstrap(){
 
     local username="$1"
-    local lxdproject="$2"
-    local zone="$lxdproject-zone"
+    local lxdProject="$2"
+    local maasZone="$lxdProject-zone"
 
     sudo -u $username juju bootstrap $JUJU_CLOUD_NAME/$JUJU_CONTROLLER_REGION $JUJU_CONTROLLER_NAME \
     --constraints $JUJU_CONTROLLER_CONSTRAINTS \
     --bootstrap-series=$JUJU_CONTROLLER_SERIES \
     --config bootstrap-timeout=$JUJU_CONTROLLER_TIMEOUT \
-    --to zone=$zone \
+    --to zone=$maasZone \
     --verbose --debug --keep-broken    
 
     ### Setup Controller
