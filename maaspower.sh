@@ -2,7 +2,6 @@
 
 MAASPOWER_DIR="/opt/maaspower"
 MAASPOWER_CONFIG=$MAASPOWER_DIR/maaspower.cfg
-
 MAASPOWER_SERVICE_NAME=maaspower.service
 MAASPOWER_SERVICE_FILE=/etc/systemd/system/$MAASPOWER_SERVICE_NAME
 
