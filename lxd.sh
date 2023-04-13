@@ -15,7 +15,7 @@ lxd_install(){
     local lxdSeedDir="$seedDir/$LXD_SEED_FOLDER_NAME"
     local lxdSeedFile="$lxdSeedDir/$LXD_SEED_FILE_NAME"    
 
-    commons_createFolder "$lxcDir"    
+    commons_createFolder "$lxdSeedDir"    
 
     echo "INFO: Installing lxd $listenIp:$listenPort/$lxdProject on bridge $bridgeInterface"    
 
