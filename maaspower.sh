@@ -9,11 +9,11 @@ MAASPOWER_SERVICE_FILE=/etc/systemd/system/$MAASPOWER_SERVICE_NAME
 
 maaspower_install(){
 
-	local $ip="$1"
-	local $port="$2"
-	local $user="$3"
-	local $password="$3"
-	local $usbId="$4"
+	local ip="$1"
+	local port="$2"
+	local user="$3"
+	local password="$3"
+	local usbId="$4"
 
     echo "INFO: Installing maaspower"
 
