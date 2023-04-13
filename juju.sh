@@ -49,8 +49,8 @@ credentials:
       maas-oauth: $apiKey
 EOF
 
-	commons_setOwnerRecursive "$username" "$jujuCredentialDir"
-	commons_setOwnerRecursive "$username" "$jujuDir"
+    commons_setOwnerRecursive "$username" "$jujuCredentialDir"
+    commons_setOwnerRecursive "$username" "$jujuDir"
 
     echo "INFO: Adding juju cloud $jujuCloudConfigFile as user $username"
     sudo -u $username juju add-cloud --client $JUJU_CLOUD_NAME -f $jujuCloudConfigFile
