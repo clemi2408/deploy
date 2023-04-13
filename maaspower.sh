@@ -1,21 +1,26 @@
 #!/bin/bash
 
-MAASPOWER_DIR="/opt/maaspower"
-MAASPOWER_CONFIG=$MAASPOWER_DIR/maaspower.cfg
+MASSPOWER_SEED_FOLDER_NAME="maaspower"
+MASSPOWER_CONFIG_FILE_NAME="maaspower.cfg"
+
 MAASPOWER_SERVICE_NAME=maaspower.service
 MAASPOWER_SERVICE_FILE=/etc/systemd/system/$MAASPOWER_SERVICE_NAME
 
 maaspower_install(){
 
-    local ip="$1"
-    local port="$2"
-    local user="$3"
-    local password="$4"
-    local usbId="$5"
+    local seedDir="$1"
+    local ip="$2"
+    local port="$3"
+    local user="$4"
+    local password="$5"
+    local usbId="$6"
+
+    local maasPowerDir="$seedDir/$MASSPOWER_SEED_FOLDER_NAME"
+    local maasPowerConfig="$maasPowerDir/$MASSPOWER_CONFIG_FILE_NAME"
 
     echo "INFO: Installing maaspower"
 
-    commons_createFolder $MAASPOWER_DIR
+    commons_createFolder $maasPowerDir
 
     echo "INFO: Installing uhubctl"
     apt-get -y install uhubctl
@@ -23,11 +28,11 @@ maaspower_install(){
     echo "INFO: Installing python"
     apt-get -y install python3.10-venv
 
-    echo "INFO: Creating virtual python environment $MAASPOWER_DIR"
-    python3 -m venv $MAASPOWER_DIR
+    echo "INFO: Creating virtual python environment $maasPowerDir"
+    python3 -m venv $maasPowerDir
 
-    echo "INFO: Activating virtual python environment $MAASPOWER_DIR"
-    source $MAASPOWER_DIR/bin/activate
+    echo "INFO: Activating virtual python environment $maasPowerDir"
+    source $maasPowerDir/bin/activate
 
     echo "INFO: Upgrading pip"
     pip install --upgrade pip wheel
@@ -35,9 +40,9 @@ maaspower_install(){
     echo "INFO: Installing maaspower"
     python3 -m pip install maaspower
 
-    echo "INFO: Config for maaspower $MAASPOWER_CONFIG"
+    echo "INFO: Config for maaspower $maasPowerConfig"
 
-    cat <<EOF >>$MAASPOWER_CONFIG
+    cat <<EOF >>$maasPowerConfig
 # yaml-language-server: \$schema=maaspower.schema.json
 # NOTE: above relative path to a schema file from 'maaspower schema <filename>'
 
@@ -83,7 +88,7 @@ EOF
 [Unit]
 Description=maaspower daemon
 [Service]
-ExecStart=$MAASPOWER_DIR/bin/maaspower run $MAASPOWER_CONFIG
+ExecStart=$maasPowerDir/bin/maaspower run $maasPowerConfig
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -103,16 +108,21 @@ EOF
 
 maaspower_remove(){
 
+    local seedDir="$1"
+    local maasPowerDir="$seedDir/$MASSPOWER_SEED_FOLDER_NAME"
+    local maasPowerConfig="$maasPowerDir/$MASSPOWER_CONFIG_FILE_NAME"
+
     echo "INFO: Removing maaspower"
     
     systemctl stop $MAASPOWER_SERVICE_NAME
     systemctl disable $MAASPOWER_SERVICE_NAME
-    source $MAASPOWER_DIR/bin/activate
+    source $maasPowerDir/bin/activate
     python3 -m pip uninstall -y maaspower
     apt-get -y purge uhubctl
     apt-get -y purge python3.10-venv
 
     commons_deleteFile $MAASPOWER_SERVICE_FILE
-    commons_deleteFolder $MAASPOWER_DIR
+    commons_deleteFile $maasPowerConfig
+    commons_deleteFolder $maasPowerDir
 
 }
