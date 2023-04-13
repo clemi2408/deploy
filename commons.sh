@@ -63,5 +63,16 @@ commons_moveFile(){
     fi
 }
 
+commons_setOwnerRecursive(){
 
+    local target="$1"
+    local username="$2"
 
+    if [[ -e $target ]]; then
+        echo "INFO: Setting ownership for $target to $username" 1>&2
+        chown -R $username:$username $target
+    else
+       echo "WARN: Can not set ownership for $target to $username" 1>&2
+    fi
+
+}
