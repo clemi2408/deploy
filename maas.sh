@@ -8,26 +8,35 @@ MAAS_OS="ubuntu"
 MAAS_OS_RELEASE="jammy"
 MAAS_OS_ARCHES=("arm64" "amd64")
 
+MAAS_SEED_FOLDER_NAME="maas"
+APIKEY_FILE_NAME="apiKey"
+
 maas_install(){
 
-	local maasIp="$1"
-	local maasUser="$2"
-	local maasPassword="$3"
-	local syslogIp="$4"
-	local gatewayIp="$5"
-	local dnsIp="$6"
-	local ntpIp="$7"
-	local lxdIp="$8"
-	local lxdPort="$9"
-	local lxdProject="${10}"
-	local lxdSecret="${11}"
-	local sshKey="${12}"
-	local dhcpStart="${13}"
-	local dhcpEnd="${14}"
-	local apiKeyFile="${15}"	
+    local seedDir="$1"
+    local maasIp="$2"
+    local maasUser="$3"
+    local maasPassword="$4"
+    local syslogIp="$5"
+    local gatewayIp="$6"
+    local dnsIp="$7"
+    local ntpIp="$8"
+    local lxdIp="$9"
+    local lxdPort="${10}"
+    local lxdProject="${11}"
+    local lxdSecret="${12}"
+    local sshKey="${13}"
+    local dhcpStart="${14}"
+    local dhcpEnd="${15}"    
 
-	local maasLocalLxdPool=$lxdProject-pool
-	local maasLocalLxdZone=$lxdProject-zone
+    local maasSeedDir="$seedDir/$MAAS_SEED_FOLDER_NAME"    
+
+    commons_createFolder "$maasSeedDir"    
+
+    local apiKeyFile="$maasSeedDir/$APIKEY_FILE_NAME"	    
+
+    local maasLocalLxdPool=$lxdProject-pool
+    local maasLocalLxdZone=$lxdProject-zone    
 
     local subnet=$(ip -o -f inet route |grep -e "link" | awk '{print $1}')
     local maasUrl=http://$maasIp:5240/MAAS
@@ -57,7 +66,7 @@ maas_install(){
     echo "INFO: Writing api key for user $maasUser"
     echo $apiKey > $apiKeyFile
 
-    echo "INFO: Sleeping"
+    echo "INFO: Sleeping $MAAS_POST_INSTALL_SLEEP_IN_SEC sec"
     sleep $MAAS_POST_INSTALL_SLEEP_IN_SEC
 
     #======= LOGIN 
@@ -200,9 +209,17 @@ maas_install(){
 
 maas_remove(){
 
+    local seedDir="$1"
+
     echo "INFO: Removing MaaS"
 
     snap remove --purge maas
     snap remove --purge maas-test-db
+
+    local apiKeyFile="$maasSeedDir/$APIKEY_FILE_NAME"	
+    commons_deleteFile "$apiKeyFile"
+
+    local maasSeedDir="$seedDir/$MAAS_SEED_FOLDER_NAME"
+    commons_deleteFolder "$maasSeedDir"
 
 }
