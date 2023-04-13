@@ -1,15 +1,24 @@
 #!/bin/bash
 
 RSYSLOG_CONFIG=/etc/rsyslog.conf
-RSYSLOG_CONFIG_BACKUP=/etc/rsyslog.bak
+
+RSYSLOG_SEED_FOLDER_NAME="rsyslog"
+RSYSLOG_BACKUP_FILE_NAME="rsyslog.bak"
 
 rsyslog_enableRemote(){
 
+    local seedDir="$1"
+    local rsyslogDir="$seedDir/$RSYSLOG_SEED_FOLDER_NAME"
+    local rsyslogBackupFile="$rsyslogDir/$RSYSLOG_BACKUP_FILE_NAME"
+
     echo "INFO: Installing rsyslog"
+
+    commons_createFolder $rsyslogDir
+
     apt-get -y install rsyslog
 
-    echo "INFO: Backup rsyslog config $RSYSLOG_CONFIG to $RSYSLOG_CONFIG_BACKUP"
-    commons_copyFile "$RSYSLOG_CONFIG" "$RSYSLOG_CONFIG_BACKUP"
+    echo "INFO: Backup rsyslog config $RSYSLOG_CONFIG to $rsyslogBackupFile"
+    commons_moveFile "$RSYSLOG_CONFIG" "$rsyslogBackupFile"
 
     echo "INFO: Enabling rsyslog tcp and udp"
     sed -i '/module(load="imudp")/s/^#//g' $RSYSLOG_CONFIG
@@ -39,8 +48,15 @@ EOF
 
 rsyslog_disableRemote(){
 
-    echo "INFO: Restoring rsyslog config backup $RSYSLOG_CONFIG_BACKUP"
-    commons_moveFile "$RSYSLOG_CONFIG_BACKUP" "$RSYSLOG_CONFIG"
+    local seedDir="$1"
+    local rsyslogDir="$seedDir/$RSYSLOG_SEED_FOLDER_NAME"
+    local rsyslogBackupFile="$rsyslogDir/$RSYSLOG_BACKUP_FILE_NAME"
+
+
+    echo "INFO: Restoring rsyslog config backup $rsyslogBackupFile"
+    commons_moveFile "$rsyslogBackupFile" "$RSYSLOG_CONFIG"
+
+    commons_deleteFolder "$rsyslogDir"
 
     echo "INFO: Testing rsyslog config $RSYSLOG_CONFIG"
     rsyslogd -f $RSYSLOG_CONFIG -N1
