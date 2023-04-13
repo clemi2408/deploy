@@ -3,6 +3,8 @@ IPv6_SYSCTL_FILE=/etc/sysctl.d/10-disable-ipv6.conf
 
 ipv6_disable(){
 
+    echo "Disabling"
+
     if [[ ! -e $IPv6_SYSCTL_FILE ]]; then
 
         echo "INFO: Disabling IPv6 via File $IPv6_SYSCTL_FILE"
