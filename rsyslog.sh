@@ -18,7 +18,7 @@ rsyslog_enableRemote(){
     apt-get -y install rsyslog
 
     echo "INFO: Backup rsyslog config $RSYSLOG_CONFIG to $rsyslogBackupFile"
-    commons_moveFile "$RSYSLOG_CONFIG" "$rsyslogBackupFile"
+    commons_copyFile "$RSYSLOG_CONFIG" "$rsyslogBackupFile"
 
     echo "INFO: Enabling rsyslog tcp and udp"
     sed -i '/module(load="imudp")/s/^#//g' $RSYSLOG_CONFIG
