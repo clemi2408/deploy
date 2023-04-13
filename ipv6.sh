@@ -36,7 +36,7 @@ ipv6_enable(){
     elif [[ -f $IPv6_SYSCTL_FILE ]]; then
 
         echo "INFO: Enabling IPv6 by removing file $IPv6_SYSCTL_FILE" 1>&2
-        rm $IPv6_SYSCTL_FILE
+        commons_deleteFile "$IPv6_SYSCTL_FILE"
         sysctl -p
     
     fi
