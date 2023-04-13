@@ -10,8 +10,8 @@ maaspower_install(){
     local ip="$1"
     local port="$2"
     local user="$3"
-    local password="$3"
-    local usbId="$4"
+    local password="$4"
+    local usbId="$5"
 
     echo "INFO: Installing maaspower"
 
