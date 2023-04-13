@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MASSPOWER_SEED_FOLDER_NAME="maaspower"
-MASSPOWER_CONFIG_FILE_NAME="maaspower.cfg"
+MAASPOWER_SEED_FOLDER_NAME="maaspower"
+MAASPOWER_CONFIG_FILE_NAME="maaspower.cfg"
 
 MAASPOWER_SERVICE_NAME=maaspower.service
 MAASPOWER_SERVICE_FILE=/etc/systemd/system/$MAASPOWER_SERVICE_NAME
@@ -15,8 +15,8 @@ maaspower_install(){
     local password="$5"
     local usbId="$6"
 
-    local maasPowerDir="$seedDir/$MASSPOWER_SEED_FOLDER_NAME"
-    local maasPowerConfig="$maasPowerDir/$MASSPOWER_CONFIG_FILE_NAME"
+    local maasPowerDir="$seedDir/$MAASPOWER_SEED_FOLDER_NAME"
+    local maasPowerConfig="$maasPowerDir/$MAASPOWER_CONFIG_FILE_NAME"
 
     echo "INFO: Installing maaspower"
 
@@ -109,8 +109,8 @@ EOF
 maaspower_remove(){
 
     local seedDir="$1"
-    local maasPowerDir="$seedDir/$MASSPOWER_SEED_FOLDER_NAME"
-    local maasPowerConfig="$maasPowerDir/$MASSPOWER_CONFIG_FILE_NAME"
+    local maasPowerDir="$seedDir/$MAASPOWER_SEED_FOLDER_NAME"
+    local maasPowerConfig="$maasPowerDir/$MAASPOWER_CONFIG_FILE_NAME"
 
     echo "INFO: Removing maaspower"
     
