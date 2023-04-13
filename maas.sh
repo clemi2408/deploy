@@ -99,13 +99,13 @@ maas_install(){
     echo "INFO: Setting default storage layout to $MAAS_STORAGE_LAYOUT"
     maas $maasUser maas set-config name=default_storage_layout value=$MAAS_STORAGE_LAYOUT
 
-    echo "INFO: Enabling disk erasing on release"
+    echo "INFO: Enabling disk erase on release"
     maas $maasUser maas set-config name=enable_disk_erasing_on_release value=true
 
-    echo "INFO: Disabling secure disk erasing on release"
+    echo "INFO: Disabling secure disk erase on release"
     maas $maasUser maas set-config name=disk_erase_with_secure_erase value=false
 
-    echo "INFO: Enabling quick disk erasing on release"
+    echo "INFO: Enabling quick disk erase on release"
     maas $maasUser maas set-config name=disk_erase_with_quick_erase value=true
 
     echo "INFO: Setting NTP server to $ntpIp"
@@ -183,10 +183,10 @@ maas_install(){
     echo "INFO: Adding description for default zone"
     maas $maasUser zone update default description="This zone was configured by a script."
 
-    echo "INFO: Adding local lxd pool $maasLocalLxdPool"
+    echo "INFO: Adding lxd pool $maasLocalLxdPool"
     maas $maasUser resource-pools create name=$maasLocalLxdPool description="local lxd pool"
 
-    echo "INFO: Adding local lxd zone $maasLocalLxdZone"
+    echo "INFO: Adding lxd zone $maasLocalLxdZone"
     maas $maasUser zones create name=$maasLocalLxdZone description="local lxd zone"
 
     #======= Add local lxd
