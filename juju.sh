@@ -21,7 +21,6 @@ juju_install(){
     local jujuCloudCredentialFile=$jujuDir/$JUJU_CRED_FILE_NAME
 
     echo "INFO: Installing juju $JUJU_VERSION"
-
     snap install juju --classic --channel="$JUJU_VERSION"
 
     commons_createFolder $jujuDir
@@ -50,8 +49,8 @@ credentials:
       maas-oauth: $apiKey
 EOF
 
-    chown -R $username:$username $jujuCredentialDir
-    chown -R $username:$username $jujuDir
+	commons_setOwnerRecursive "$username" "$jujuCredentialDir"
+	commons_setOwnerRecursive "$username" "$jujuDir"
 
     echo "INFO: Adding juju cloud $jujuCloudConfigFile as user $username"
     sudo -u $username juju add-cloud --client $JUJU_CLOUD_NAME -f $jujuCloudConfigFile
@@ -73,8 +72,8 @@ juju_remove(){
     local jujuCloudCredentialFile=$jujuDir/$JUJU_CRED_FILE_NAME
 
     echo "INFO: Removing Juju"
-
     snap remove --purge juju
+
     commons_deleteFolder "$jujuCredentialDir"
     commons_deleteFile "$jujuCloudConfigFile"
     commons_deleteFile "$jujuCloudCredentialFile"
