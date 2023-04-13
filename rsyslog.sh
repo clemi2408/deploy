@@ -3,7 +3,7 @@
 RSYSLOG_CONFIG=/etc/rsyslog.conf
 
 RSYSLOG_SEED_FOLDER_NAME="rsyslog"
-RSYSLOG_BACKUP_FILE_NAME="rsyslog.bak"
+RSYSLOG_BACKUP_FILE_NAME="rsyslog-conf.backup"
 
 rsyslog_enableRemote(){
 
