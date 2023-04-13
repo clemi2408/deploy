@@ -1,22 +1,29 @@
 #!/bin/bash
 
-LXD_SEED_FILE=/tmp/lxd-seed.yml
+LXD_SEED_FOLDER_NAME="lxd"
+LXD_SEED_FILE_NAME="seed.yml"
 
 lxd_install(){
 
-	local listenIp="$1"
-	local listenPort="$2"
-	local bridgeInterface="$3"
-	local lxdProject="$4"
-	local secret="$5"
+    local seedDir="$1"
+    local listenIp="$2"
+    local listenPort="$3"
+    local bridgeInterface="$4"
+    local lxdProject="$5"
+    local secret="$6"    
 
-    echo "INFO: Installing lxd $listenIp:$listenPort/$lxdProject on bridge $bridgeInterface"
+    local lxdSeedDir="$seedDir/$LXD_SEED_FOLDER_NAME"
+    local lxdSeedFile="$lxdSeedDir/$LXD_SEED_FILE_NAME"    
 
-    snap install lxd
+    commons_createFolder "$lxcDir"    
 
-    echo "INFO: Creating lxd seed file $LXD_SEED_FILE"
+    echo "INFO: Installing lxd $listenIp:$listenPort/$lxdProject on bridge $bridgeInterface"    
 
-    cat <<EOF >>$LXD_SEED_FILE
+    snap install lxd    
+
+    echo "INFO: Creating lxd seed file $lxdSeedFile"
+
+    cat <<EOF >>$lxdSeedFile
 config:
   core.https_address: '$listenIp:$listenPort'
   core.trust_password: $secret
@@ -44,8 +51,8 @@ projects: []
 cluster: null
 EOF
 
-    echo "INFO: Seeding lxd $LXD_SEED_FILE"
-    lxd init --preseed < "$LXD_SEED_FILE"
+    echo "INFO: Seeding lxd $lxdSeedFile"
+    lxd init --preseed < "$lxdSeedFile"
 
     echo "INFO: Creating lxd project $lxdProject"
     lxc project create "$lxdProject"
@@ -57,10 +64,15 @@ EOF
 
 lxd_remove(){
     
+    local seedDir="$1"
+    local lxdSeedDir="$seedDir/$LXD_SEED_FOLDER_NAME"
+    local lxdSeedFile="$lxdSeedDir/$LXD_SEED_FILE_NAME"
+
     echo "INFO: Removing lxd"
 
     snap remove --purge lxd
 
-    commons_deleteFile $LXD_SEED_FILE
+    commons_deleteFile $lxdSeedFile
+    commons_deleteFolder $lxdSeedDir
 
 }
