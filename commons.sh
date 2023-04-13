@@ -35,3 +35,33 @@ commons_createFolder(){
         echo "WARN: $dir already exists" 1>&2
     fi
 }
+
+
+commons_copyFile(){
+
+    local source="$1"
+    local target="$2"
+
+    if [[ ! -e $source ]]; then
+        echo "WARN: Source not found copying $source to $target" 1>&2
+    elif [[ -f $source ]]; then
+        echo "INFO: Copy $source to $target" 1>&2
+        cp $source $target
+    fi
+}
+
+commons_moveFile(){
+
+    local source="$1"
+    local target="$2"
+
+    if [[ ! -e $source ]]; then
+        echo "WARN: Source not found moving $source to $target" 1>&2
+    elif [[ -f $source ]]; then
+        echo "INFO: Moving $source to $target" 1>&2
+        mv $source $target
+    fi
+}
+
+
+
