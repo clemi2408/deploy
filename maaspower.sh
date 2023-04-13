@@ -112,7 +112,7 @@ maaspower_remove(){
     apt-get -y purge uhubctl
     apt-get -y purge python3.10-venv
 
-    deleteFile $MAASPOWER_SERVICE_FILE
-    deleteFolder $MAASPOWER_DIR
+    commons_deleteFile $MAASPOWER_SERVICE_FILE
+    commons_deleteFolder $MAASPOWER_DIR
 
 }
