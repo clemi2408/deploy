@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 MAASPOWER_DIR="/opt/maaspower"
 MAASPOWER_CONFIG=$MAASPOWER_DIR/maaspower.cfg
 
@@ -116,5 +115,5 @@ maaspower_remove(){
 
     deleteFile $MAASPOWER_SERVICE_FILE
     deleteFolder $MAASPOWER_DIR
-    
+
 }
