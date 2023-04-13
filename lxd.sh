@@ -2,9 +2,6 @@
 
 LXD_SEED_FILE=/tmp/lxd-seed.yml
 
-
-lxd_install "IP" "PORT" "BR0" "PROJECT" "SECRET"
-
 lxd_install(){
 
 	local listenIp="$1"
