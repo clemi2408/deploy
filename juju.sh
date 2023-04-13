@@ -7,6 +7,36 @@ JUJU_CLOUD_FILE_NAME="jujuCloud.yml"
 JUJU_CRED_FILE_NAME="jujuCreds.yml"
 HOME_PREFIX="/home"
 LOCAL_SHARE_FOLDER=".local/share"
+#==============================
+JUJU_CONTROLLER_NAME="juju01"
+JUJU_CONTROLLER_REGION="default"
+JUJU_CONTROLLER_SERIES="jammy"
+JUJU_CONTROLLER_TIMEOUT=10000
+JUJU_CONTROLLER_USER="admin"
+JUJU_CONTROLLER_CONSTRAINTS="mem=1.5G cores=1 arch=arm64"
+
+
+juju_bootstrap(){
+
+    local username="$1"
+    local lxdproject="$2"
+    local zone="$lxdproject-zone"
+
+    sudo -u $username juju bootstrap $JUJU_CLOUD_NAME/$JUJU_CONTROLLER_REGION $JUJU_CONTROLLER_NAME \
+    --constraints $JUJU_CONTROLLER_CONSTRAINTS \
+    --bootstrap-series=$JUJU_CONTROLLER_SERIES \
+    --config bootstrap-timeout=$JUJU_CONTROLLER_TIMEOUT \
+    --to zone=$zone \
+    --verbose --debug --keep-broken    
+
+    ### Setup Controller
+    sudo -u $username juju change-user-password $JUJU_CONTROLLER_USER
+    sudo -u $username juju dashboard
+
+
+}
+
+
 
 juju_install(){
 
