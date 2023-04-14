@@ -65,12 +65,12 @@ if [ "$1" = "install" ]; then
    lxd_install "$SEED_DIR" "$IP" "$LXD_PORT" "$INTERFACE" "$LXD_PROJECT_NAME" "$LXD_SECRET"
    maaspower_install "$SEED_DIR" "$IP" "$MAASPOWER_PORT" "$MAASPOWER_USER" "$MAASPOWER_PASSWORD" "$MAASPOWER_USB_ID"
    maas_install "$SEED_DIR" "$IP" "$MAAS_ADMIN_USER" "$MAAS_ADMIN_PASSWORD" "$IP" "$MAAS_GATEWAY_IP" "$MAAS_DNS_IP" "$MAAS_NTP_IP" "$IP" "$LXD_PORT" "$LXD_PROJECT_NAME" "$LXD_SECRET" "$MAAS_SSH_KEY" "$MAAS_DHCP_START" "$MAAS_DHCP_END"
-   juju_install "$JUJU_LOCAL_USER" "$MAAS_ADMIN_USER"
+   juju_installClient "$JUJU_LOCAL_USER" "$MAAS_ADMIN_USER"
 
 elif [ "$1" = "remove" ]; then
 
    downloadLibs
-   juju_remove "$JUJU_LOCAL_USER"
+   juju_removeClient "$JUJU_LOCAL_USER"
    maas_remove "$SEED_DIR"
    maaspower_remove "$SEED_DIR"
    lxd_remove "$SEED_DIR"
@@ -79,12 +79,17 @@ elif [ "$1" = "remove" ]; then
    commons_deleteFolder "$SEED_DIR"
    apt-get -y autoremove
 
-elif [ "$1" = "bootstrap" ]; then   
+elif [ "$1" = "installController" ]; then   
 
    downloadLibs
-   juju_bootstrap "$JUJU_LOCAL_USER" "$LXD_PROJECT_NAME" "$JUJU_USER" "$JUJU_PASSWORD"
+   juju_installController "$JUJU_LOCAL_USER" "$LXD_PROJECT_NAME" "$JUJU_USER" "$JUJU_PASSWORD"
+
+elif [ "$1" = "removeController" ]; then   
+
+   downloadLibs
+   juju_removeController "$JUJU_LOCAL_USER"
+
 
 else
-   echo "try install, bootstrap or remove "
+   echo "try install, remove or installController, removeController"
 fi
-
