@@ -45,7 +45,7 @@ downloadLibs(){
 
         
       local url="$REPO/$lib"
-      local target="$TMP_DIR/$lib"
+      local target="$TMP_DIR/lib/$lib"
 
       echo "INFO: Downloading lib $lib via $url to $target"
       curl -s -o $target $url
