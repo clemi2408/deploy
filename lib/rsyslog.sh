@@ -4,16 +4,19 @@ RSYSLOG_CONFIG=/etc/rsyslog.conf
 
 RSYSLOG_SEED_FOLDER_NAME="rsyslog"
 RSYSLOG_BACKUP_FILE_NAME="rsyslog-conf.backup"
+LOG_FOLDER_NAME="logs"
 
 rsyslog_enableRemote(){
 
     local seedDir="$1"
     local rsyslogDir="$seedDir/$RSYSLOG_SEED_FOLDER_NAME"
     local rsyslogBackupFile="$rsyslogDir/$RSYSLOG_BACKUP_FILE_NAME"
+    local logFolder="$seedDir/$LOG_FOLDER_NAME"
 
     echo "INFO: Installing rsyslog"
 
     commons_createFolder $rsyslogDir
+    commons_createFolder $logFolder
 
     apt-get -y install rsyslog
 
@@ -30,7 +33,7 @@ rsyslog_enableRemote(){
     cat >> $RSYSLOG_CONFIG << EOF
 
 #Custom template to generate the log filename dynamically based on the client's IP address.
-\$template RemInputLogs, "/var/log/remotelogs/%FROMHOST-IP%/%PROGRAMNAME%.log"
+\$template RemInputLogs, "$logFolder/%FROMHOST-IP%/%PROGRAMNAME%.log"
 *.* ?RemInputLogs
 EOF
 
@@ -51,7 +54,7 @@ rsyslog_disableRemote(){
     local seedDir="$1"
     local rsyslogDir="$seedDir/$RSYSLOG_SEED_FOLDER_NAME"
     local rsyslogBackupFile="$rsyslogDir/$RSYSLOG_BACKUP_FILE_NAME"
-
+    local logFolder="$seedDir/$LOG_FOLDER_NAME"
 
     echo "INFO: Restoring rsyslog config backup $rsyslogBackupFile"
     commons_moveFile "$rsyslogBackupFile" "$RSYSLOG_CONFIG"
@@ -63,5 +66,7 @@ rsyslog_disableRemote(){
 
     echo "INFO: Restarting rsyslog"
     systemctl restart rsyslog
+
+    commons_deleteFolder "$logFolder"
     
 }
