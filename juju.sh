@@ -106,11 +106,11 @@ juju_installController(){
 
     echo "INFO: Boostrapping juju controller to zone $maasZone as $osUser"
 
-    sudo -u $osUser juju bootstrap $JUJU_CLOUD_NAME/$JUJU_CONTROLLER_REGION $JUJU_CONTROLLER_NAME \
-    --constraints $JUJU_CONTROLLER_CONSTRAINTS \
-    --bootstrap-series=$JUJU_CONTROLLER_SERIES \
+    sudo -u $osUser juju bootstrap "$JUJU_CLOUD_NAME"/"$JUJU_CONTROLLER_REGION" "$JUJU_CONTROLLER_NAME" \
+    --constraints "$JUJU_CONTROLLER_CONSTRAINTS" \
+    --bootstrap-series="$JUJU_CONTROLLER_SERIES" \
     --config bootstrap-timeout=$JUJU_CONTROLLER_TIMEOUT \
-    --to zone=$maasZone \
+    --to zone="$maasZone" \
     --verbose --debug --keep-broken    
 
     echo "INFO: Setting password for juju user $jujuUser as $osUser"
