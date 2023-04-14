@@ -93,3 +93,4 @@ elif [ "$1" = "removeController" ]; then
 else
    echo "try install, remove or installController, removeController"
 fi
+
