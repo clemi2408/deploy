@@ -130,8 +130,15 @@ EOD
 
 juju_removeController(){
 
-  local osUser="$1"
-  sudo -u $osUser juju destroy-controller $JUJU_CONTROLLER_NAME --destroy-all-models
+    local osUser="$1"
+
+    expect <(cat << EOD
+spawn sudo -u $osUser juju destroy-controller $JUJU_CONTROLLER_NAME --destroy-all-models
+expect "Continue? (y/N):" { send "y\r" }
+interact
+EOD
+)
+
+    sudo -u $osUser juju destroy-controller $JUJU_CONTROLLER_NAME --destroy-all-models
 
 }
-
