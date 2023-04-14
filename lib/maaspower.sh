@@ -53,28 +53,28 @@ username: $user
 password: $password
 devices:
   - type: CommandLine
-    name: rpi1
+    name: rpi01
     on: uhubctl -l $usbId -a 1 -p 1
     off: uhubctl -l $usbId -a 0 -p 1
     query: uhubctl -l $usbId -p 1
     query_on_regex: .*power$
     query_off_regex: .*off$
   - type: CommandLine
-    name: rpi2
+    name: rpi02
     on: uhubctl -l $usbId -a 1 -p 2
     off: uhubctl -l $usbId -a 0 -p 2
     query: uhubctl -l $usbId -p 2
     query_on_regex: .*power$
     query_off_regex: .*off$
   - type: CommandLine
-    name: rpi3
+    name: rpi03
     on: uhubctl -l $usbId -a 1 -p 3
     off: uhubctl -l $usbId -a 0 -p 3
     query: uhubctl -l $usbId -p 3
     query_on_regex: .*power$
     query_off_regex: .*off$
   - type: CommandLine
-    name: rpi4
+    name: rpi04
     on: uhubctl -l $usbId -a 1 -p 4
     off: uhubctl -l $usbId -a 0 -p 4
     query: uhubctl -l $usbId -p 4
