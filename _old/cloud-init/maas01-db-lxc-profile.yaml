@@ -1,0 +1,142 @@
+content: |
+  config:
+    security.secureboot: "false"
+    user.network-config: |
+      version: 2
+      ethernets:
+        eth0:
+          dhcp4: no
+          dhcp6: no
+          optional: true
+          addresses: [192.168.2.101/24]
+          gateway4: 192.168.2.254
+          nameservers:
+            addresses: [192.168.2.254]
+    user.user-data: |
+      #cloud-config
+      hostname: maas01-db
+      fqdn: maas01-db.maas.bru.int.cleem.de          
+
+      locale: "de_DE.UTF-8"
+      timezone: Europe/Berlin
+      keyboard: {layout: de, toggle: null, variant: ''}          
+
+      chpasswd: { expire: false }
+      ssh_pwauth: false
+      password: secret          
+
+      package_update: true
+      package_upgrade: true
+      packages:
+        - openssh-server
+        - postgresql 
+        - postgresql-contrib          
+
+      final_message: "Cloud init is done.!"          
+
+      users:
+        - default
+        - name: ubuntu
+          ssh-authorized-keys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local
+          sudo: ['ALL=(ALL) NOPASSWD:ALL']
+          groups: sudo
+          shell: /bin/bash          
+
+      ntp:
+        servers: ['ptbtime1.ptb.de', 'ptbtime2.ptb.de', 'ptbtime3.ptb.de']          
+
+      write_files:
+        - path: /etc/sysctl.d/10-disable-ipv6.conf
+          permissions: 0644
+          owner: root
+          content: |
+            net.ipv6.conf.all.disable_ipv6=1
+            net.ipv6.conf.default.disable_ipv6=1
+            net.ipv6.conf.lo.disable_ipv6=1
+
+        - path: /opt/cleem/seed/init.sh
+          permissions: 0755
+          owner: root
+          content: |
+            #!/bin/bash
+            echo ===== START: VM - INITCMD =====
+            MAAS_DB_NAME="maas01-db"
+            MAAS_DB_OWNER="admin"
+            MAAS_PASSWD="admin"
+
+            echo "INFO: Calling initmaasdb.sh"
+            bash -c "/opt/cleem/seed/initmaasdb.sh $MAAS_DB_NAME $MAAS_DB_OWNER $MAAS_PASSWD"
+
+            echo ===== END: VM - INITCMD =====
+            rm /etc/systemd/system/firstboot.service
+            #rm -r /opt/cleem/seed
+
+        - path: /opt/cleem/seed/initmaasdb.sh
+          permissions: 0755
+          owner: root
+          content: |
+            #!/bin/bash
+            echo ===== START: VM - INITPG =====
+            DB_NAME="$1"
+            DB_OWNER="$2"
+            PASSWD="$3"
+            HBA_FILE="/etc/postgresql/12/main/pg_hba.conf"
+
+            echo "INFO: Creating user $DB_OWNER"
+            sudo -u postgres psql -c "CREATE USER $DB_OWNER WITH ENCRYPTED PASSWORD '$PASSWD'"
+
+            echo "INFO: Creating database $DB_NAME"
+            sudo -u postgres createdb -O "$DB_OWNER" "$DB_NAME"
+
+            echo "INFO: Listing databases"
+            sudo -u postgres psql -c "\l"
+
+            HBA_STRING="host    $DB_NAME      $DB_OWNER    0/0       md5"
+
+            echo "$HBA_STRING" >> $HBA_FILE
+
+            tail -1 $HBA_FILE
+
+            echo ===== END: VM - INITPG =====
+
+
+        - path: /etc/systemd/system/firstboot.service
+          permissions: 0644
+          owner: root
+          content: |
+            [Unit]
+            Description=One time boot script
+            [Service]
+            Type=simple
+            ExecStart=/opt/cleem/seed/init.sh
+            [Install]
+            WantedBy=multi-user.target
+
+      bootcmd:
+        - [ sh, -xc, "echo ===== START: VM - BOOTCMD =====" ]
+        - [ mkdir, -p, /opt/cleem/seed ]
+        - [ sh, -xc, "echo ===== END: VM - BOOTCMD =====" ]    
+        
+      runcmd:
+        - [ sh, -xc, "echo ===== START: VM - RUNCMD =====" ]
+        - [ systemctl, daemon-reload ]
+        - [ systemctl, enable, firstboot.service ]
+        - [ sh, -xc, "echo ===== END: VM -RUNCMD =====" ]      
+
+      power_state:
+        mode: reboot          
+
+  description: maas01_bru LXD profile
+  devices:
+    eth0:
+      name: eth0
+      nictype: bridged
+      parent: br0
+      type: nic
+    root:
+      path: /
+      pool: local
+      type: disk
+  name: maas01
+  used_by: []

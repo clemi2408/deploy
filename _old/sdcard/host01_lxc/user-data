@@ -1,0 +1,136 @@
+#cloud-config
+hostname: host01
+fqdn: host01.lxd.bru.int.cleem.de
+
+locale: "de_DE.UTF-8"
+timezone: Europe/Berlin
+keyboard: {layout: de, toggle: null, variant: ''}
+
+chpasswd: { expire: false }
+ssh_pwauth: false
+password: secret
+
+package_update: true
+package_upgrade: true
+packages:
+  - openssh-server
+  - snapd
+
+final_message: "Cloud init is done.!"
+
+users:
+  - default
+  - name: ubuntu
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+
+ntp:
+  servers: ['ptbtime1.ptb.de', 'ptbtime2.ptb.de', 'ptbtime3.ptb.de']
+
+write_files:
+  - path: /etc/sysctl.d/10-disable-ipv6.conf
+    permissions: 0644
+    owner: root
+    content: |
+      net.ipv6.conf.all.disable_ipv6=1
+      net.ipv6.conf.default.disable_ipv6=1
+      net.ipv6.conf.lo.disable_ipv6=1
+
+  - path: /opt/cleem/seed/lxdseed.yml
+    permissions: 0644
+    owner: root
+    content: |
+      config:
+        core.https_address: 192.168.2.1:8443
+        core.trust_password: clemens
+      networks: []
+      storage_pools:
+      - config:
+          size: 80GB
+        description: ""
+        name: local
+        driver: zfs
+      profiles:
+      - config: {}
+        description: ""
+        devices:
+          eth0:
+            name: eth0
+            nictype: bridged
+            parent: br0
+            type: nic
+          root:
+            path: /
+            pool: local
+            type: disk
+        name: default
+      projects: []
+      cluster:
+        server_name: host01
+        enabled: true
+        member_config: []
+        cluster_address: ""
+        cluster_certificate: ""
+        server_address: ""
+        cluster_password: ""
+        cluster_certificate_path: ""
+        cluster_token: ""
+
+  - path: /opt/cleem/seed/init.sh
+    permissions: 0755
+    owner: root
+    content: |
+      #!/bin/bash
+      echo ===== START: INITCMD =====
+      LXD_SEED_FILE="/opt/cleem/seed/lxdseed.yml"
+      echo "INFO: Calling initlxd.sh for $LXD_SEED_FILE"
+      bash -c "/opt/cleem/seed/initlxd.sh $LXD_SEED_FILE"
+      echo ===== START: INITCMD =====
+      rm /etc/systemd/system/firstboot.service
+      #rm -r /opt/cleem/seed
+      reboot
+
+  - path: /opt/cleem/seed/initlxd.sh
+    permissions: 0755
+    owner: root
+    content: |
+      #!/bin/bash
+      echo ===== START: INITLXD =====
+      LXD_SEED_FILE="$1"
+      echo "INFO: Seeding LXD from $LXD_SEED_FILE"
+      /snap/bin/lxd init --preseed < "$LXD_SEED_FILE"
+      echo "INFO: Disabling LXD secureboot"
+      /snap/bin/lxc profile set default security.secureboot false
+      echo ===== END: INITLXD =====
+
+  - path: /etc/systemd/system/firstboot.service
+    permissions: 0644
+    owner: root
+    content: |
+      [Unit]
+      Description=One time boot script
+      [Service]
+      Type=simple
+      ExecStart=/opt/cleem/seed/init.sh
+      [Install]
+      WantedBy=multi-user.target 
+bootcmd:
+  - [ sh, -xc, "echo ===== START: BOOTCMD =====" ]
+  - [ mkdir, -p, /mnt/usb01 ]
+  - [ mkdir, -p, /opt/cleem/seed ]
+  - [ sh, -xc, "echo ===== END: BOOTCMD =====" ]
+
+mounts:
+  - [ /dev/disk/by-partuuid/8a04d377-8388-425d-905e-c14eab550c0b, /mnt/usb01, "vfat", "defaults,nofail,discard", "0", "0" ]
+
+runcmd:
+  - [ sh, -xc, "echo ===== START: RUNCMD =====" ]
+  - [ systemctl, daemon-reload ]
+  - [ systemctl, enable, firstboot.service ]
+  - [ sh, -xc, "echo ===== END: RUNCMD =====" ]
+
+power_state:
+  mode: reboot

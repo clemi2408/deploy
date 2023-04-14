@@ -1,0 +1,105 @@
+#cloud-config
+autoinstall:
+  version: 1
+  early-commands:
+    - systemctl stop ssh
+ # apt:
+ #   # even set to no/false, geoip lookup still happens
+ #   #geoip: no
+ #   preserve_sources_list: false
+ #   primary:
+ #   - arches: [amd64, i386]
+ #     uri: http://us.archive.ubuntu.com/ubuntu
+ #   - arches: [default]
+ #     uri:
+ # keyboard: {layout: us, variant: ''}
+ # locale: en_US.UTF-8
+  network:
+    network:
+      version: 2
+      ethernets:
+        eth0:
+          dhcp4: yes
+          dhcp-identifier: mac
+  apt:
+    preserve_sources_list: false
+    primary:
+      - arches: [amd64]
+        uri: "http://archive.ubuntu.com/ubuntu/"
+  ssh:
+    install-server: yes
+    authorized-keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local"
+    allow-pw: yes
+  identity:
+    hostname: default-ubuntu
+    password: "$6$FhcddHFVZ7ABA4Gi$9l4yURWASWe8xEa1jzI0bacVLvhe3Yn4/G3AnU11K3X0yu/mICVRxfo6tZTB2noKljlIRzjkVZPocdf63MtzC0" # root
+    username: ubuntu # root doesn't work
+  packages:
+    - curl
+  user-data:
+    disable_root: false
+  late-commands:
+    - systemctl start ssh
+    - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
+    - sed -ie 's/GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX="net.ifnames=0 ipv6.disable=1 biosdevname=0"/' /target/etc/default/grub
+    - curtin in-target --target /target update-grub2
+#ca_certs:
+  # If present and set to True, the 'remove_defaults' parameter will remove
+  # all the default trusted CA certificates that are normally shipped with
+  # Ubuntu.
+  # This is mainly for paranoid admins - most users will not need this
+  # functionality.
+  remove_defaults: true
+  #
+  # If present, the 'trusted' parameter should contain a certificate (or list
+  # of certificates) to add to the system as trusted CA certificates.
+  # Pay close attention to the YAML multiline list syntax.  The example shown
+  # here is for a list of multiline certificates.
+  #trusted: 
+  #- |
+  # -----BEGIN CERTIFICATE-----
+  # YOUR-ORGS-TRUSTED-CA-CERT-HERE
+  # -----END CERTIFICATE-----
+  #- |
+  # -----BEGIN CERTIFICATE-----
+  # YOUR-ORGS-TRUSTED-CA-CERT-HERE
+  # -----END CERTIFICATE-----
+  #
+# manage_resolv_conf: true
+#
+#resolv_conf:
+#  nameservers: ['8.8.4.4', '8.8.8.8']
+#  searchdomains:
+#    - foo.example.com
+#    - bar.example.com
+#  domain: example.com
+#  options:
+#    rotate: true
+#    timeout: 1
+#
+#write_files:
+  # override the kernel package
+  #- path: /run/kernel-meta-package
+  #  content: |
+  #    linux-virtual
+  #  owner: root:root
+  #  permissions: "0644"
+  # attempt to also use an answers file by providing a file at the default path.  It did not seem to have any effect
+  #- path: /subiquity_config/answers.yaml
+  #  content: |
+  #    InstallProgress:
+  #      reboot: no
+  #  owner: root:root
+  #  permissions: "0644"
+  #
+#bootcmd:
+ #- echo 192.168.1.130 us.archive.ubuntu.com >> /etc/hosts
+ #- [ cloud-init-per, once, mymkfs, mkfs, /dev/vdb ]
+ #
+#runcmd:
+# - [ ls, -l, / ]
+# - [ sh, -xc, "echo $(date) ': hello world!'" ]
+# - [ sh, -c, echo "=========hello world'=========" ]
+# - ls -l /root
+final_message: "The system is finally up, after $UPTIME seconds"

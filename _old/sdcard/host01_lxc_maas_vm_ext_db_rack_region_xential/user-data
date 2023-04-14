@@ -1,0 +1,846 @@
+#cloud-config
+hostname: host01
+fqdn: host01.lxd.bru.int.cleem.de
+
+locale: "de_DE.UTF-8"
+timezone: Europe/Berlin
+keyboard: {layout: de, toggle: null, variant: ''}
+
+chpasswd: { expire: false }
+ssh_pwauth: false
+password: secret
+
+package_update: true
+package_upgrade: true
+packages:
+  - openssh-server
+  - snapd
+
+final_message: "Cloud init is done.!"
+
+users:
+  - default
+  - name: ubuntu
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+
+ntp:
+  servers: ['ptbtime1.ptb.de', 'ptbtime2.ptb.de', 'ptbtime3.ptb.de']
+
+write_files:
+  - path: /etc/sysctl.d/10-disable-ipv6.conf
+    permissions: 0644
+    owner: root
+    content: |
+      net.ipv6.conf.all.disable_ipv6=1
+      net.ipv6.conf.default.disable_ipv6=1
+      net.ipv6.conf.lo.disable_ipv6=1
+
+  - path: /opt/cleem/seed/lxdseed.yml
+    permissions: 0644
+    owner: root
+    content: |
+      config:
+        core.https_address: 192.168.2.1:8443
+        core.trust_password: clemens
+      networks: []
+      storage_pools:
+      - config:
+          size: 80GB
+        description: ""
+        name: local
+        driver: zfs
+      profiles:
+      - config: {}
+        description: ""
+        devices:
+          eth0:
+            name: eth0
+            nictype: bridged
+            parent: br0
+            type: nic
+          root:
+            path: /
+            pool: local
+            type: disk
+        name: default
+      projects: []
+      cluster:
+        server_name: host01
+        enabled: true
+        member_config: []
+        cluster_address: ""
+        cluster_certificate: ""
+        server_address: ""
+        cluster_password: ""
+        cluster_certificate_path: ""
+        cluster_token: ""
+
+  - path: /opt/cleem/seed/profile-region-db01.maas.bru.int.cleem.de.yml
+    permissions: 0644
+    owner: root
+    content: |
+      config:
+        security.secureboot: "false"
+        security.nesting: "true"
+        user.network-config: |
+          version: 2
+          ethernets:
+            eth0:
+              dhcp4: no
+              dhcp6: no
+              optional: true
+              addresses: [192.168.2.101/24]
+              gateway4: 192.168.2.254
+              nameservers:
+                addresses: [192.168.2.254]
+        user.user-data: |
+          #cloud-config
+          hostname: region-db01
+          fqdn: region-db01.maas.bru.int.cleem.de          
+
+          locale: "de_DE.UTF-8"
+          timezone: Europe/Berlin
+          keyboard: {layout: de, toggle: null, variant: ''}          
+
+          chpasswd: { expire: false }
+          ssh_pwauth: false
+          password: secret          
+
+          package_update: true
+          package_upgrade: true
+          packages:
+            - openssh-server
+            - postgresql 
+            - postgresql-contrib          
+
+          final_message: "Cloud init is done.!"          
+
+          users:
+            - default
+            - name: ubuntu
+              ssh-authorized-keys:
+                - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              groups: sudo
+              shell: /bin/bash          
+
+          ntp:
+            servers: ['ptbtime1.ptb.de', 'ptbtime2.ptb.de', 'ptbtime3.ptb.de']          
+
+          write_files:
+            - path: /etc/sysctl.d/10-disable-ipv6.conf
+              permissions: 0644
+              owner: root
+              content: |
+                net.ipv6.conf.all.disable_ipv6=1
+                net.ipv6.conf.default.disable_ipv6=1
+                net.ipv6.conf.lo.disable_ipv6=1
+
+            - path: /opt/cleem/seed/init.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                echo ===== START: VM - INITCMD =====
+                FIRSTBOOT_SERVICE_FILE="/etc/systemd/system/firstboot.service"
+                MAAS_DB_NAME="maas-bru-int-cleem-de"
+                MAAS_DB_OWNER="admin"
+                MAAS_PASSWD="admin"
+
+                echo "INFO: Calling initpgdb.sh"
+                bash -c "/opt/cleem/seed/initpgdb.sh $MAAS_DB_NAME $MAAS_DB_OWNER $MAAS_PASSWD"
+
+                echo "INFO: Removing firstboot service"
+                rm $FIRSTBOOT_SERVICE_FILE
+
+                #rm -r /opt/cleem/seed
+
+                echo "INFO: Rebooting"
+                reboot
+
+                echo ===== END: VM - INITCMD =====
+
+            - path: /opt/cleem/seed/initpgdb.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                echo ===== START: VM - INITPGDB =====
+                DB_NAME="$1"
+                DB_OWNER="$2"
+                PASSWD="$3"
+                HBA_FILE="/etc/postgresql/12/main/pg_hba.conf"
+                PG_CONF_FILE="/etc/postgresql/12/main/postgresql.conf"
+                LISTEN_STRING="listen_addresses = '*'"
+
+                function waitForPostgres(){
+                  until sudo -u postgres psql -c '\l'; do
+                      echo >&2 "WARN: Postgres is unavailable - sleeping"
+                      sleep 5
+                  done
+                }
+
+                function showStatus(){
+                  
+                  echo "INFO: Listing databases"
+                  sudo -u postgres psql -c "\l"
+
+                }
+
+                waitForPostgres
+
+                echo "INFO: Creating user $DB_OWNER"
+                sudo -u postgres psql -c "CREATE USER $DB_OWNER WITH ENCRYPTED PASSWORD '$PASSWD'"
+                echo "INFO: Creating database $DB_NAME"
+                sudo -u postgres createdb -O "$DB_OWNER" "$DB_NAME"
+
+
+                echo "INFO: Writing database HBA file $HBA_FILE"
+
+                cat > "$HBA_FILE" <<EOL
+                local   all             postgres                                peer
+                local   all             all                                     peer
+                host    all             all             ::1/128                 md5
+                local   replication     all                                     peer
+                host    replication     all             127.0.0.1/32            md5
+                host    replication     all             ::1/128                 md5
+
+                host    all             all             0.0.0.0/0             md5
+                host    $DB_NAME      $DB_OWNER    0/0       md5
+                EOL
+
+                tail -2 $HBA_FILE
+
+                echo "INFO: Writing database config file $PG_CONF_FILE"
+
+                echo "$LISTEN_STRING" >> $PG_CONF_FILE
+
+                echo "INFO: Stopping database"
+                service postgresql stop
+                
+                echo "INFO: Starting database"
+                service postgresql start
+
+                waitForPostgres
+                echo ===== END: VM - INITPGDB =====
+
+            - path: /etc/systemd/system/firstboot.service
+              permissions: 0644
+              owner: root
+              content: |
+                [Unit]
+                Description=One time boot script
+                [Service]
+                Type=simple
+                ExecStart=/opt/cleem/seed/init.sh
+                [Install]
+                WantedBy=multi-user.target
+
+          bootcmd:
+            - [ sh, -xc, "echo ===== START: VM - BOOTCMD =====" ]
+            - [ mkdir, -p, /opt/cleem/seed ]
+            - [ sh, -xc, "echo ===== END: VM - BOOTCMD =====" ]    
+            
+          runcmd:
+            - [ sh, -xc, "echo ===== START: VM - RUNCMD =====" ]
+            - [ systemctl, daemon-reload ]
+            - [ systemctl, enable, firstboot.service ]
+            - [ sh, -xc, "echo ===== END: VM -RUNCMD =====" ]      
+
+          power_state:
+            mode: reboot          
+
+      description: lxd profile region-db01.maas.bru.int.cleem.de
+      devices:
+        eth0:
+          name: eth0
+          nictype: bridged
+          parent: br0
+          type: nic
+        root:
+          path: /
+          pool: local
+          type: disk
+      name: region-db01
+      used_by: []
+
+  - path: /opt/cleem/seed/profile-region01.maas.bru.int.cleem.de.yml
+    permissions: 0644
+    owner: root
+    content: |
+      config:
+        security.secureboot: "false"
+        security.nesting: "true"
+        user.network-config: |
+          version: 2
+          ethernets:
+            eth0:
+              dhcp4: no
+              dhcp6: no
+              optional: true
+              addresses: [192.168.2.100/24]
+              gateway4: 192.168.2.254
+              nameservers:
+                addresses: [192.168.2.254]
+        user.user-data: |
+          #cloud-config
+          hostname: region01
+          fqdn: region01.maas.bru.int.cleem.de
+          locale: "de_DE.UTF-8"
+          timezone: Europe/Berlin
+          keyboard: {layout: de, toggle: null, variant: ''}          
+
+          chpasswd: { expire: false }
+          ssh_pwauth: false
+          password: secret          
+
+          package_update: true
+          package_upgrade: true
+          packages:
+            - openssh-server
+            - postgresql-client
+            - snapd          
+
+          final_message: "Cloud init is done.!"          
+
+          users:
+            - default
+            - name: ubuntu
+              ssh-authorized-keys:
+                - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              groups: sudo
+              shell: /bin/bash          
+
+          ntp:
+            servers: ['ptbtime1.ptb.de', 'ptbtime2.ptb.de', 'ptbtime3.ptb.de']          
+
+          write_files:
+            - path: /etc/sysctl.d/10-disable-ipv6.conf
+              permissions: 0644
+              owner: root
+              content: |
+                net.ipv6.conf.all.disable_ipv6=1
+                net.ipv6.conf.default.disable_ipv6=1
+                net.ipv6.conf.lo.disable_ipv6=1
+
+            - path: /opt/cleem/seed/init.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                echo ===== START: VM - INITCMD =====
+                FIRSTBOOT_SERVICE_FILE="/etc/systemd/system/firstboot.service"
+                MAAS_REGION_USER="admin"
+                MAAS_REGION_USER_PASSWORD="admin"
+                MAAS_REGION_USER_EMAIL="admin@maas.bru.int.cleem.de"
+                MAAS_REGION_NAME="region01.maas.bru.int.cleem.de"
+                JUJU_CLOUD_NAME="maas.bru.int.cleem.de"
+
+                MAAS_REGION_DB_NAME="maas-bru-int-cleem-de"
+                MAAS_REGION_DB_USER="admin"
+                MAAS_REGION_DB_PASSWORD="admin"
+                MAAS_REGION_DB_HOST="192.168.2.101"
+                MAAS_REGION_DNS_SERVERS="192.168.2.106,192.168.2.107"
+                MAAS_REGION_NTP_SERVERS="ptbtime1.ptb.de,ptbtime2.ptb.de,ptbtime3.ptb.de"
+
+                MAAS_RACK_SECRET="0e8bd02cc7c45c5a7c16131d6ba44d72"
+                MAAS_ZONE_NAME="az_lxc_cluster"
+                MAAS_POOL_NAME="rp_lxc_cluster"
+                MAAS_REGION_CREATE_DB="true"
+                MAAS_REGION_SHOW_INTRO="true"
+
+                #MAAS_REGION_DB_URL="maas-test-db:///"
+                MAAS_REGION_DB_URL="postgres://$MAAS_REGION_DB_USER:$MAAS_REGION_DB_PASSWORD@$MAAS_REGION_DB_HOST/$MAAS_REGION_DB_NAME"
+                ANON_MAAS_REGION_DB_URL="postgres://$MAAS_REGION_DB_USER:XXXXXXX@$MAAS_REGION_DB_HOST/$MAAS_REGION_DB_NAME"
+
+
+                echo "INFO: Calling initmaasregion.sh using $ANON_MAAS_REGION_DB_URL"
+               
+                bash -c "/opt/cleem/seed/initmaasregion.sh $MAAS_REGION_USER $MAAS_REGION_USER_PASSWORD $MAAS_REGION_USER_EMAIL $MAAS_REGION_DB_URL $MAAS_REGION_CREATE_DB $MAAS_RACK_SECRET"
+
+                bash -c "/opt/cleem/seed/seedmaasregiondb.sh $MAAS_REGION_DB_URL $MAAS_REGION_NAME $MAAS_REGION_NTP_SERVERS $MAAS_REGION_DNS_SERVERS $MAAS_RACK_SECRET $MAAS_ZONE_NAME $MAAS_POOL_NAME $MAAS_REGION_SHOW_INTRO"
+
+                echo "INFO: Calling initjuju.sh creating config for cloud $JUJU_CLOUD_NAME"
+                bash -c "/opt/cleem/seed/initjuju.sh $JUJU_CLOUD_NAME $MAAS_REGION_USER"
+
+                echo "INFO: Removing firstboot service"
+                rm $FIRSTBOOT_SERVICE_FILE
+                
+                #rm -r /opt/cleem/seed
+
+                echo ===== END: VM - INITCMD =====
+
+            - path: /opt/cleem/seed/initmaasregion.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                echo ===== START: VM - INITMAASREGION =====
+
+                REGION_USER="$1"
+                REGION_USER_PASSWORD="$2"
+                REGION_USER_EMAIL="$3"
+                REGION_DB_URL="$4"
+                REGION_CREATE_DB="$5"
+                REGION_RACK_SECRET="$6"
+
+                RACK_SECRET_FILE="/var/snap/maas/common/maas/secret"
+                REGION_PORT=5240
+
+                REGION_IP=$(hostname -I | head -n 1 | xargs)
+                REGION_URL="http://$REGION_IP:$REGION_PORT/MAAS"      
+
+                until pg_isready -d $REGION_DB_URL ; do
+                  echo >&2 "WARN: Region database not available - sleeping"
+                  sleep 5
+                done
+
+                echo "INFO: Configuring MaaS region $REGION_URL"
+                /snap/bin/maas init region --enable-debug --enable-debug-queries --force --maas-url "$REGION_URL" --database-uri "$REGION_DB_URL"
+
+                if [ "$REGION_CREATE_DB" = "true" ]; then
+
+                    echo "INFO: Configuring MaaS region user $REGION_USER $REGION_USER_EMAIL"
+                    /snap/bin/maas createadmin --username $REGION_USER --password $REGION_USER_PASSWORD --email $REGION_USER_EMAIL --ssh-import ''      
+
+                else
+                    echo "INFO: Using existing region DB"
+                fi  
+
+
+                echo "INFO: MaaS region status $REGION_URL"
+                /snap/bin/maas status
+
+                echo "INFO: Writing MaaS rack secret to Database"
+                psql $REGION_DB_URL -c "update maasserver_config set value = '$REGION_RACK_SECRET' where id = 1"
+
+                echo "INFO: Writing MaaS rack secret to File $RACK_SECRET_FILE"
+                echo "$REGION_RACK_SECRET" > "$RACK_SECRET_FILE"
+
+                echo ===== END: VM - INITMAASREGION =====
+
+            - path: /opt/cleem/seed/seedmaasregiondb.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                MAAS_DB_URL="$1"
+                MAAS_NAME="$2"
+                MAAS_NTP_STRING_RAW="$3"
+                MAAS_DNS_STRING_RAW="$4"
+                MAAS_RPC_SECRET="$5"
+                MAAS_ZONE="$6"
+                MAAS_REGION="$7"
+                MAAS_INTRO_COMPLETE="$8"
+
+                MAAS_DNS_STRING=${MAAS_DNS_STRING_RAW//,/ }
+                MAAS_NTP_STRING=${MAAS_NTP_STRING_RAW//,/ }
+
+                function setConfig(){
+                  
+                  local DB_URL="$1"
+                  local KEY="$2"
+                  local VALUE="$3"
+                  local TABLE_NAME="maasserver_config"
+
+                  local SQL="INSERT INTO $TABLE_NAME (name, value) VALUES ('$KEY', '$VALUE') ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value"
+                  
+                  echo "INFO: Executing SQL"
+                  echo "$SQL"
+
+                  psql $DB_URL -c "$SQL"
+                }
+
+                function createStructure(){
+                  
+                  local DB_URL="$1"
+                  local TABLE_NAME="$2"
+                  local NAME="$3"
+
+                  local SQL="INSERT INTO $TABLE_NAME (name, description, created, updated) VALUES ('$NAME','$NAME', now(), now())"
+                  
+                  echo "INFO: Executing SQL"
+                  echo "$SQL"
+
+                  psql $DB_URL -c "$SQL"
+                }
+
+                function createPool(){
+                  
+                  local DB_URL="$1"
+                  local TABLE_NAME="maasserver_resourcepool"
+                  local NAME="$2"
+
+                  createStructure "$DB_URL" "$TABLE_NAME" "$NAME" 
+                }
+
+                function createZone(){
+                  
+                  local DB_URL="$1"
+                  local TABLE_NAME="maasserver_zone"
+                  local NAME="$2"
+
+                  createStructure "$DB_URL" "$TABLE_NAME" "$NAME" 
+                }
+
+                setConfig "$MAAS_DB_URL" "maas_name" "$MAAS_NAME"
+                setConfig "$MAAS_DB_URL" "upstream_dns" "$MAAS_DNS_STRING"
+                setConfig "$MAAS_DB_URL" "ntp_servers" "$MAAS_NTP_STRING"
+                setConfig "$MAAS_DB_URL" "rpc_shared_secret" "$MAAS_RPC_SECRET"
+                setConfig "$MAAS_DB_URL" "completed_intro" "$MAAS_INTRO_COMPLETE"
+
+                setConfig "$MAAS_DB_URL" "ntp_external_only" "false"
+                setConfig "$MAAS_DB_URL" "network_discovery" "enabled"
+                setConfig "$MAAS_DB_URL" "active_discovery_interval" "600"
+
+                createZone "$MAAS_DB_URL" "$MAAS_ZONE" 
+                createPool "$MAAS_DB_URL" "$MAAS_REGION"
+
+                #SET SSH KEY
+                #DISABLE ANALYTICS
+                #QUICK ERASE
+                #DISABLE ERASE
+                #DHCPSNIPPETS
+                #DNSDOMAINS
+                #IMAGES SELECTION
+                #
+
+            - path: /opt/cleem/seed/initjuju.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                # ./initjuju.sh "maas01" "admin"
+                echo ===== START: VM - INITJUJU =====
+
+                JUJU_CLOUD_NAME="$1"
+                MAAS_REGION_USER="$2"
+
+                MAAS_REGION_PORT=5240
+                MAAS_REGION_IP=$(hostname -I | head -n 1 | xargs)
+                MAAS_REGION_URL="http://$MAAS_REGION_IP:$MAAS_REGION_PORT/MAAS"      
+
+                echo "INFO: $JUJU_CLOUD_NAME - Getting API Key for $MAAS_REGION_USER"      
+
+                MAAS_REGION_USER_KEY=$(/snap/bin/maas apikey --username $MAAS_REGION_USER)
+                JUJU_CLOUD_CONFIG_FILE="/opt/cleem/seed/juju-$JUJU_CLOUD_NAME-cloud.yaml"
+                JUJU_CLOUD_CREDENTIAL_FILE="/opt/cleem/seed/juju-$JUJU_CLOUD_NAME-creds.yaml"        
+
+                echo "INFO: $JUJU_CLOUD_NAME - Creating juju cloud config $JUJU_CLOUD_CONFIG_FILE"        
+
+                tee "$JUJU_CLOUD_CONFIG_FILE" > /dev/null << EOF
+                clouds:
+                  $JUJU_CLOUD_NAME:
+                    type: maas
+                    auth-types: [oauth1]
+                    endpoint: $MAAS_REGION_URL
+                EOF
+
+                echo "INFO: $JUJU_CLOUD_NAME - Creating juju cloud credentials $JUJU_CLOUD_CREDENTIAL_FILE"        
+
+                tee "$JUJU_CLOUD_CREDENTIAL_FILE" > /dev/null << EOF
+                credentials:
+                  $JUJU_CLOUD_NAME:
+                    anyuser:
+                      auth-type: oauth1
+                      maas-oauth: $MAAS_REGION_USER_KEY
+                EOF
+
+                echo "INFO: $JUJU_CLOUD_NAME - Adding juju cloud config"
+                /snap/bin/juju add-cloud --client -f $JUJU_CLOUD_CONFIG_FILE $JUJU_CLOUD_NAME        
+
+                echo "INFO: $JUJU_CLOUD_NAME - Adding juju cloud credentials"
+                /snap/bin/juju add-credential --client -f $JUJU_CLOUD_CREDENTIAL_FILE $JUJU_CLOUD_NAME      
+
+                echo ===== END: VM - INITJUJU =====
+
+            - path: /etc/systemd/system/firstboot.service
+              permissions: 0644
+              owner: root
+              content: |
+                [Unit]
+                Description=One time boot script
+                [Service]
+                Type=simple
+                ExecStart=/opt/cleem/seed/init.sh
+                [Install]
+                WantedBy=multi-user.target
+
+          bootcmd:
+            - [ sh, -xc, "echo ===== START: VM - BOOTCMD =====" ]
+            - [ mkdir, -p, /opt/cleem/seed ]
+            - [ sh, -xc, "echo ===== END: VM - BOOTCMD =====" ]    
+            
+          runcmd:
+            - [ sh, -xc, "echo ===== START: VM - RUNCMD =====" ]
+            - [ /usr/bin/snap, install, maas ]
+            #- [ /usr/bin/snap, install, maas-test-db]
+            - [ /usr/bin/snap, install, juju, --classic ]
+            - [ systemctl, daemon-reload ]
+            - [ systemctl, enable, firstboot.service ]
+            - [ sh, -xc, "echo ===== END: VM -RUNCMD =====" ]      
+
+          power_state:
+            mode: reboot          
+
+      description: lxd profile region01.maas.bru.int.cleem.de
+      devices:
+        eth0:
+          name: eth0
+          nictype: bridged
+          parent: br0
+          type: nic
+        root:
+          path: /
+          pool: local
+          type: disk
+      name: region01
+      used_by: []
+
+  - path: /opt/cleem/seed/profile-rack01.maas.bru.int.cleem.de.yml
+    permissions: 0644
+    owner: root
+    content: |
+      config:
+        security.secureboot: "false"
+        security.nesting: "true"
+        user.network-config: |
+          version: 2
+          ethernets:
+            eth0:
+              dhcp4: no
+              dhcp6: no
+              optional: true
+              addresses: [192.168.2.102/24]
+              gateway4: 192.168.2.254
+              nameservers:
+                addresses: [192.168.2.254]
+        user.user-data: |
+          #cloud-config
+          hostname: rack01
+          fqdn: rack01.maas.bru.int.cleem.de
+          locale: "de_DE.UTF-8"
+          timezone: Europe/Berlin
+          keyboard: {layout: de, toggle: null, variant: ''}          
+
+          chpasswd: { expire: false }
+          ssh_pwauth: false
+          password: secret          
+
+          package_update: true
+          package_upgrade: true
+          packages:
+            - openssh-server
+            - snapd          
+
+          final_message: "Cloud init is done.!"          
+
+          users:
+            - default
+            - name: ubuntu
+              ssh-authorized-keys:
+                - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmlRbfaE4y7z1DcLi0ViI/qDyulpy5aSyJPyS/dUU0ZvUg5Wq/pK734Kv9T026jUysSPTk9uEFc6ZRjFyBcvAmBKr3pepRE3NIEMVaTf2eJ/E6Ipm7Z1yVDM30u7fNxP6kyup5AMWShYe52HQKZOhpV1+KFuE6RA4GJpt17nmfTF/jXf9qrbHY3CuufvE1wWsFhnQZKH2K2hi4OpytAUjdXJbHgjuzd6gkzKRy3DXS/wddU3rgKS9uja9HKVfuBB3DRixi8Y/hB0Ve3dw8WcFVxGhjE1zZmWJZQ93VBxQUBubMW2j5/I71hhbgE+dZ5jXhqK3ppz1HYW6FIdxt0IyCC/bUoPF9FV4MNtsNosz9lCjZcNVbAv7u+0nNKyL6AykptDekzL/mbuLy16EC7IiX6gm8Dud9VX9sRYflFM7kglVxdaFKcngIjnnumpk9WI8+4GY4ASgszAQk/dzl6JdiEtypHs2cyTzF0y29RTJQcHBiMMt0byJLFE4AutIp7jU= clemens@cknb.local
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              groups: sudo
+              shell: /bin/bash          
+
+          ntp:
+            servers: ['ptbtime1.ptb.de', 'ptbtime2.ptb.de', 'ptbtime3.ptb.de']          
+
+          write_files:
+            - path: /etc/sysctl.d/10-disable-ipv6.conf
+              permissions: 0644
+              owner: root
+              content: |
+                net.ipv6.conf.all.disable_ipv6=1
+                net.ipv6.conf.default.disable_ipv6=1
+                net.ipv6.conf.lo.disable_ipv6=1
+
+            - path: /opt/cleem/seed/init.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                echo ===== START: VM - INITCMD =====
+                FIRSTBOOT_SERVICE_FILE="/etc/systemd/system/firstboot.service"
+
+                MAAS_REGION_URL="http://192.168.2.100:5240/MAAS"
+                MAAS_RACK_SECRET="0e8bd02cc7c45c5a7c16131d6ba44d72"
+
+                echo "INFO: Calling initmaasrack.sh using $MAAS_REGION_URL"
+                bash -c "/opt/cleem/seed/initmaasrack.sh $MAAS_REGION_URL $MAAS_RACK_SECRET"
+
+                echo "INFO: Removing firstboot service"
+                rm $FIRSTBOOT_SERVICE_FILE
+
+                #rm -r /opt/cleem/seed
+
+                echo ===== END: VM - INITCMD ====
+
+            - path: /opt/cleem/seed/initmaasrack.sh
+              permissions: 0755
+              owner: root
+              content: |
+                #!/bin/bash
+                echo ===== START: VM - INITMAASRACK =====
+                REGION_URL="$1"
+                RACK_SECRET="$2"
+
+                until wget $REGION_URL ; do
+                  echo >&2 "WARN: Region URL not available $REGION_URL - sleeping"
+                  sleep 5
+                done
+
+                echo "INFO: Configuring MaaS rack with region $REGION_URL"
+                /snap/bin/maas init rack --force --maas-url "$REGION_URL" --secret "$RACK_SECRET"
+
+                echo "INFO: MaaS rack status"
+                /snap/bin/maas status
+
+                # tail -fn 20 /var/snap/maas/common/log/rackd.log
+
+                echo ===== END: VM - INITMAASRACK =====
+
+            - path: /etc/systemd/system/firstboot.service
+              permissions: 0644
+              owner: root
+              content: |
+                [Unit]
+                Description=One time boot script
+                [Service]
+                Type=simple
+                ExecStart=/opt/cleem/seed/init.sh
+                [Install]
+                WantedBy=multi-user.target
+
+          bootcmd:
+            - [ sh, -xc, "echo ===== START: VM - BOOTCMD =====" ]
+            - [ mkdir, -p, /opt/cleem/seed ]
+            - [ sh, -xc, "echo ===== END: VM - BOOTCMD =====" ]    
+            
+          runcmd:
+            - [ sh, -xc, "echo ===== START: VM - RUNCMD =====" ]
+            - [ /usr/bin/snap, install, maas ]
+            - [ systemctl, daemon-reload ]
+            - [ systemctl, enable, firstboot.service ]
+            - [ sh, -xc, "echo ===== END: VM -RUNCMD =====" ]      
+
+          power_state:
+            mode: reboot          
+
+      description: lxd profile rack01.maas.bru.int.cleem.de
+      devices:
+        eth0:
+          name: eth0
+          nictype: bridged
+          parent: br0
+          type: nic
+        root:
+          path: /
+          pool: local
+          type: disk
+      name: rack01
+      used_by: []
+
+  - path: /opt/cleem/seed/init.sh
+    permissions: 0755
+    owner: root
+    content: |
+      #!/bin/bash
+      echo ===== START: HOST - INITCMD =====
+      
+      LXD_SEED_FILE="/opt/cleem/seed/lxdseed.yml"
+      
+      echo "INFO: Calling initlxd.sh for $LXD_SEED_FILE"
+      bash -c "/opt/cleem/seed/initlxd.sh $LXD_SEED_FILE"
+
+      VM_IMAGE="images:ubuntu/20.04/cloud"
+
+      VM_TEMPLATES=( "region-db01:/opt/cleem/seed/profile-region-db01.maas.bru.int.cleem.de.yml"
+              "region01:/opt/cleem/seed/profile-region01.maas.bru.int.cleem.de.yml"
+              "rack01:/opt/cleem/seed/profile-rack01.maas.bru.int.cleem.de.yml" )
+
+      for VM_TEMPLATE in "${VM_TEMPLATES[@]}" ; do
+          
+          VM_NAME=${VM_TEMPLATE%%:*}
+          VM_TEMPLATE_FILE=${VM_TEMPLATE#*:}
+
+          echo "INFO: Calling initvm.sh for $VM_NAME with $VM_TEMPLATE_FILE"
+          bash -c "/opt/cleem/seed/initvm.sh $VM_NAME $VM_TEMPLATE_FILE $VM_IMAGE"
+
+      done
+
+      echo ===== END: HOST - INITCMD =====
+      rm /etc/systemd/system/firstboot.service
+
+  - path: /opt/cleem/seed/initlxd.sh
+    permissions: 0755
+    owner: root
+    content: |
+      #!/bin/bash
+      echo ===== START: HOST - INITLXD =====
+      LXD_SEED_FILE="$1"
+      echo "INFO: Seeding LXD from $LXD_SEED_FILE"
+      /snap/bin/lxd init --preseed < "$LXD_SEED_FILE"
+      echo "INFO: Disabling LXD secureboot"
+      /snap/bin/lxc profile set default security.secureboot false
+      /snap/bin/lxc profile set default security.nesting: "true"
+      echo ===== END: HOST - INITLXD =====
+
+  - path: /opt/cleem/seed/initvm.sh
+    permissions: 0755
+    owner: root
+    content: |
+      #!/bin/bash
+      echo ===== START: HOST - INITVM =====
+      VM_NAME="$1"
+      VM_TEMPLATE_FILE="$2"
+      VM_IMAGE="$3"
+      VM_PROFILE_NAME="$VM_NAME-lxc-profile"
+
+      echo "INFO: Creating LXD profile $VM_PROFILE_NAME"
+      /snap/bin/lxc profile create "$VM_PROFILE_NAME"
+      echo "INFO: Setting LXD profile $VM_PROFILE_NAME with content $2"
+      /snap/bin/lxc profile edit "$VM_PROFILE_NAME" < "$VM_TEMPLATE_FILE"
+
+      echo "INFO: Creating VM $VM_NAME with profile $VM_PROFILE_NAME"
+      /snap/bin/lxc init "$VM_IMAGE" $VM_NAME -p $VM_PROFILE_NAME
+      echo "INFO: Setting autostart for VM $VM_NAME with profile $VM_PROFILE_NAME"
+      /snap/bin/lxc config set "$VM_NAME" boot.autostart true
+      /snap/bin/lxc start "$VM_NAME"
+      echo ===== END: HOST - INITVM =====
+
+  - path: /etc/systemd/system/firstboot.service
+    permissions: 0644
+    owner: root
+    content: |
+      [Unit]
+      Description=One time boot script
+      [Service]
+      Type=simple
+      ExecStart=/opt/cleem/seed/init.sh
+      [Install]
+      WantedBy=multi-user.target 
+
+bootcmd:
+  - [ sh, -xc, "echo ===== START: HOST - BOOTCMD =====" ]
+  - [ mkdir, -p, /mnt/usb01 ]
+  - [ mkdir, -p, /opt/cleem/seed ]
+  - [ sh, -xc, "echo ===== END: HOST - BOOTCMD =====" ]
+
+mounts:
+  - [ /dev/disk/by-partuuid/8a04d377-8388-425d-905e-c14eab550c0b, /mnt/usb01, "vfat", "defaults,nofail,discard", "0", "0" ]
+
+runcmd:
+  - [ sh, -xc, "echo ===== START: HOST - RUNCMD =====" ]
+  - [ systemctl, daemon-reload ]
+  - [ systemctl, enable, firstboot.service ]
+  - [ sh, -xc, "echo ===== END: HOST - RUNCMD =====" ]
+
+power_state:
+  mode: reboot
