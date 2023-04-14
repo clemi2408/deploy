@@ -1,5 +1,10 @@
 # deploy
 
+- [maaspower](https://github.com/gilesknap/maaspower)
+- [MaaS](http://maas.io) (DB, Region, Rack)
+- [lxd](https://github.com/lxc/lxd)
+- [Juju](http://maas.io) (Client, Controller)
+
 Parameters:
 
 - `install`: installs MaaS
