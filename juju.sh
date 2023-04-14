@@ -27,6 +27,9 @@ juju_installClient(){
     local jujuCloudConfigFile=$jujuDir/$JUJU_CLOUD_FILE_NAME
     local jujuCloudCredentialFile=$jujuDir/$JUJU_CRED_FILE_NAME
 
+    echo "INFO: Installing expect"
+    apt-get -y install expect
+
     echo "INFO: Installing juju $JUJU_VERSION"
     snap install juju --classic --channel="$JUJU_VERSION"
 
@@ -80,6 +83,9 @@ juju_removeClient(){
 
     echo "INFO: Removing Juju"
     snap remove --purge juju
+    
+    echo "INFO: Removing expect"
+    apt-get -y purge expect
 
     commons_deleteFolder "$jujuCredentialDir"
     commons_deleteFile "$jujuCloudConfigFile"
