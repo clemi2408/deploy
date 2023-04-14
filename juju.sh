@@ -12,37 +12,47 @@ JUJU_CONTROLLER_NAME="juju01"
 JUJU_CONTROLLER_REGION="default"
 JUJU_CONTROLLER_SERIES="jammy"
 JUJU_CONTROLLER_TIMEOUT=10000
-JUJU_CONTROLLER_USER="admin"
 JUJU_CONTROLLER_CONSTRAINTS="mem=1.5G cores=1 arch=arm64"
 
 juju_bootstrap(){
 
-    local username="$1"
+    local osUser="$1"
     local lxdProject="$2"
+    local jujuUser="$3"
+    local jujuPassword="$3"
+
     local maasZone="$lxdProject-zone"
 
-    sudo -u $username juju bootstrap $JUJU_CLOUD_NAME/$JUJU_CONTROLLER_REGION $JUJU_CONTROLLER_NAME \
-    --constraints "$JUJU_CONTROLLER_CONSTRAINTS" \
-    --bootstrap-series="$JUJU_CONTROLLER_SERIES" \
+    echo "INFO: Boostrapping juju controller to zone $maasZone as $osUser"
+
+    sudo -u $osUser juju bootstrap $JUJU_CLOUD_NAME/$JUJU_CONTROLLER_REGION $JUJU_CONTROLLER_NAME \
+    --constraints $JUJU_CONTROLLER_CONSTRAINTS \
+    --bootstrap-series=$JUJU_CONTROLLER_SERIES \
     --config bootstrap-timeout=$JUJU_CONTROLLER_TIMEOUT \
-    --to zone="$maasZone" \
+    --to zone=$maasZone \
     --verbose --debug --keep-broken    
 
-    ### Setup Controller
-    sudo -u $username juju change-user-password "$JUJU_CONTROLLER_USER"
-    sudo -u $username juju dashboard
+    echo "INFO: Setting password for juju user $jujuUser as $osUser"
 
+    expect <(cat << EOD
+spawn sudo -u $osUser juju change-user-password $jujuUser
+expect "new password:" { send "$jujuPassword\r" }
+expect "type new password again:" { send "$jujuPassword\r" };
+interact
+EOD
+)
+  
+    echo "INFO: Enabling juju dashboard as $osUser"
+    sudo -u $osUser juju dashboard
 
 }
 
-
-
 juju_install(){
 
-    local username="$1"
+    local osUser="$1"
     local maasUser="$2"    
 
-    local userDir="$HOME_PREFIX/$username"
+    local userDir="$HOME_PREFIX/$osUser"
     local jujuDir="$userDir/$JUJU_SEED_FOLDER_NAME"
     local jujuCredentialDir="$userDir/$LOCAL_SHARE_FOLDER"    
 
@@ -66,7 +76,7 @@ clouds:
 EOF
 
     echo "INFO: Getting api key for user $maasUser"
-    local apiKey=$(maas apikey --username $maasUser)
+    local apiKey=$(maas apikey --osUser $maasUser)
 
     echo "INFO: Creating juju credentials"
 
@@ -78,22 +88,22 @@ credentials:
       maas-oauth: $apiKey
 EOF
 
-    commons_setOwnerRecursive "$username" "$jujuCredentialDir"
-    commons_setOwnerRecursive "$username" "$jujuDir"
+    commons_setOwnerRecursive "$osUser" "$jujuCredentialDir"
+    commons_setOwnerRecursive "$osUser" "$jujuDir"
 
-    echo "INFO: Adding juju cloud $jujuCloudConfigFile as user $username"
-    sudo -u $username juju add-cloud --client $JUJU_CLOUD_NAME -f $jujuCloudConfigFile
+    echo "INFO: Adding juju cloud $jujuCloudConfigFile as user $osUser"
+    sudo -u $osUser juju add-cloud --client $JUJU_CLOUD_NAME -f $jujuCloudConfigFile
 
-    echo "INFO: Adding juju credentials as user $username"
-    sudo -u $username juju add-credential --client $JUJU_CLOUD_NAME -f $jujuCloudCredentialFile
+    echo "INFO: Adding juju credentials as user $osUser"
+    sudo -u $osUser juju add-credential --client $JUJU_CLOUD_NAME -f $jujuCloudCredentialFile
 
 }
 
 juju_remove(){
 
-    local username="$1"    
+    local osUser="$1"    
 
-    local userDir="$HOME_PREFIX/$username"
+    local userDir="$HOME_PREFIX/$osUser"
     local jujuDir="$userDir/$JUJU_SEED_FOLDER_NAME"
     local jujuCredentialDir="$userDir/$LOCAL_SHARE_FOLDER"    
 
