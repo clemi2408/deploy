@@ -94,7 +94,7 @@ juju_installController(){
     local osUser="$1"
     local lxdProject="$2"
     local jujuUser="$3"
-    local jujuPassword="$3"
+    local jujuPassword="$4"
 
     local maasZone="$lxdProject-zone"
 
