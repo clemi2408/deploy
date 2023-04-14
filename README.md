@@ -6,7 +6,7 @@ Parameters:
 - `remove`: removes MaaS
 - `installController`: installs Juju Controller on MaaS
 - `removeController`: removes Juju Controller on MaaS
-- `configFile`: see `example.config`
+- `configFile`: see [example.config](example.config)
 
 Call:
 
