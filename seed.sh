@@ -27,6 +27,8 @@ MAAS_NTP_IP=10.0.0.254
 
 ####======= Juju parameters
 JUJU_LOCAL_USER="ubuntu"
+JUJU_USER="admin"
+JUJU_PASSWORD="admin"
 
 ####======= Runtime parameters
 INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
@@ -77,6 +79,12 @@ elif [ "$1" = "remove" ]; then
    commons_deleteFolder "$SEED_DIR"
    apt-get -y autoremove
 
+elif [ "$1" = "bootstrap" ]; then   
+
+   downloadLibs
+   juju_bootstrap "$JUJU_LOCAL_USER" "$LXD_PROJECT_NAME" "$JUJU_USER" "$JUJU_PASSWORD"
+
 else
-   echo "try install or remove"
+   echo "try install, bootstrap or remove "
 fi
+
