@@ -118,8 +118,8 @@ maas_install(){
     echo "INFO: Setting subnet $subnet as managed"
     maas $maasUser subnet update "$subnet" managed=true
 
-    echo "INFO: Setting DNS $dnsIp for subnet $subnet"
-    maas $maasUser subnet update "$subnet" dns_servers=$dnsIp
+    #echo "INFO: Setting DNS $dnsIp for subnet $subnet"
+    #maas $maasUser subnet update "$subnet" dns_servers=$dnsIp
 
     echo "INFO: Setting gateway $gatewayIp for subnet $subnet"
     maas $maasUser subnet update "$subnet" gateway_ip=$gatewayIp
